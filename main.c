@@ -92,15 +92,18 @@ int main() {
     print_data();
     p = myalloc(64);
     print_data();
+    
+    // [empty]
+    // [1008,used]
+
+    // [empty]
+    // [64,used] -> [928,free] // 64 allocated to user, 16 * 2 blocks, 928 free = 1024 heap
 
     //reset the heap
     heap = NULL;
     head = NULL;
     
     void *p2;
-
-    // [empty]
-    // [1008,used]
 
     print_data();
     p2 = myalloc(16);
@@ -111,6 +114,10 @@ int main() {
     // [empty]
     // [1008,used]
     // 0x0
+
+    // [empty]
+    // [16,used] -> [976,free] // 16 allocated to user, 16 * 2 blocks, 976 free = 1024 heap
+    // 0x7f37452a4030 // and p2 is no longer null when we try to allocate 2 times 
 
     return 0;
 }

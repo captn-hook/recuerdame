@@ -61,6 +61,34 @@ void *myalloc(int size) {
     return NULL;
 }
 
+void collect() {
+    struct block *current = head;
+    struct block *prev = NULL;
+
+    while (current != NULL) {
+        if (prev != NULL && prev->in_use == 0 && current->in_use == 0) {
+            prev->size += BLOCK_SIZE + current->size;
+            prev->next = current->next;
+        } else {
+            prev = current;
+        }
+        current = current->next;
+    }
+}
+
+void myfree(void *ptr) {
+    struct block *current = head;
+    struct block *to_free = (struct block *)ptr - 1;
+
+    while (current != NULL) {
+        if (current == to_free) {
+            current->in_use = 0;
+            collect();
+            return;
+        }
+        current = current->next;
+    }
+}
 
 void print_data(void)
 {
@@ -89,8 +117,10 @@ int main() {
 
     void *p;
 
+    //printf("pre alloc(64)");
     print_data();
     p = myalloc(64);
+    //printf("post alloc(64)");
     print_data();
     
     // [empty]
@@ -99,17 +129,26 @@ int main() {
     // [empty]
     // [64,used] -> [928,free] // 64 allocated to user, 16 * 2 blocks, 928 free = 1024 heap
 
-    //reset the heap
-    heap = NULL;
-    head = NULL;
-    
-    void *p2;
+    //reset memory
+    //printf("pre free(p)\n");
+    myfree(p);
+    print_data();
 
+    //printf("pre alloc(16)\n");
     print_data();
-    p2 = myalloc(16);
+    p = myalloc(16);
+    //printf("post alloc(16)\n");
     print_data();
+    void *p2 = myalloc(16);
     p2 = myalloc(16);
-    printf("%p\n", p2);
+    //printf("post alloc another(16)\n");
+    //printf("%p\n", p);
+    print_data();
+
+    //printf("pre free(p)\n");
+    myfree(p);
+    myfree(p2);
+    print_data();
 
     // [empty]
     // [1008,used]

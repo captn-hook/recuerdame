@@ -117,46 +117,43 @@ int main() {
 
     void *p;
 
-    //printf("pre alloc(64)");
+    p = myalloc(512);
     print_data();
-    p = myalloc(64);
-    //printf("post alloc(64)");
+
+    myfree(p);
     print_data();
+
+    // [512,used] -> [480,free]
+    // [512,free] -> [480,free]
+    void *p2;
+
+    void *p3 = myalloc(10);     print_data();
+    p2 = myalloc(20); print_data();
+    void *p4 = myalloc(30);     print_data();
+    myfree(p2);       print_data();
+    void *p5 = myalloc(40);     print_data();
+    void *p6 = myalloc(10);     print_data();
     
-    // [empty]
-    // [1008,used]
+    myfree(p3); myfree(p4); myfree(p5); myfree(p6); print_data();
 
-    // [empty]
-    // [64,used] -> [928,free] // 64 allocated to user, 16 * 2 blocks, 928 free = 1024 heap
-
-    //reset memory
-    //printf("pre free(p)\n");
-    myfree(p);
-    print_data();
-
-    //printf("pre alloc(16)\n");
-    print_data();
-    p = myalloc(16);
-    //printf("post alloc(16)\n");
-    print_data();
-    void *p2 = myalloc(16);
-    p2 = myalloc(16);
-    //printf("post alloc another(16)\n");
-    //printf("%p\n", p);
-    print_data();
-
-    //printf("pre free(p)\n");
-    myfree(p);
-    myfree(p2);
-    print_data();
-
-    // [empty]
-    // [1008,used]
-    // 0x0
-
-    // [empty]
-    // [16,used] -> [976,free] // 16 allocated to user, 16 * 2 blocks, 976 free = 1024 heap
-    // 0x7f37452a4030 // and p2 is no longer null when we try to allocate 2 times 
+    // [16,used] -> [976,free]
+    // [16,used] -> [32,used] -> [928,free]
+    // [16,used] -> [32,used] -> [32,used] -> [880,free]
+    // [16,used] -> [32,free] -> [32,used] -> [880,free]
+    // [16,used] -> [32,free] -> [32,used] -> [48,used] -> [816,free]
+    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [816,free]
+    
+    myalloc(10); print_data();
+    myalloc(20); print_data();
+    myalloc(30); print_data();
+    myalloc(40); print_data();
+    myalloc(50); print_data();
+    
+    // [16,used] -> [976,free]
+    // [16,used] -> [32,used] -> [928,free]
+    // [16,used] -> [32,used] -> [32,used] -> [880,free]
+    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [816,free]
+    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [64,used] -> [736,free]
 
     return 0;
 }

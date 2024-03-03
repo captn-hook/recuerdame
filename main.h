@@ -10,7 +10,7 @@
 #define PADDED_SIZE(x) ((x) + GET_PAD(x))
 #define PTR_OFFSET(p, offset) ((void*)((char *)(p) + (offset)))
 
-
+// plus (presumably) 16 bytes for the block 
 struct block {
     int size;
     int in_use;

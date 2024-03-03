@@ -22,15 +22,17 @@ void init_heap() {
 }
 
 void split(struct block *currentBlock, int size) {
+    int padded_size = PADDED_SIZE(size);
+
     // create a new block     // from memory  // of the next free space
-    struct block *new_block = (struct block *)PTR_OFFSET((currentBlock + 1), size);
-    // new size is    //old size         // - new size    
-    new_block->size = currentBlock->size - size - BLOCK_SIZE;
+    struct block *new_block = (struct block *)PTR_OFFSET((currentBlock + 1), padded_size);
+    // new size is    //old size         // - new size
+    new_block->size = currentBlock->size - padded_size - BLOCK_SIZE;
     new_block->in_use = 0;
     // new block points to the next block
     new_block->next = currentBlock->next;
     // current block points to the new block
-    currentBlock->size = size;
+    currentBlock->size = padded_size; 
     currentBlock->next = new_block;
 }
 
@@ -40,16 +42,18 @@ void *myalloc(int size) {
         init_heap();
     }
 
+    int padded_size = PADDED_SIZE(size);
+
     struct block *current = head;
 
     // find a block.size >= size we want
     while (current != NULL) {
-        if (current->in_use == 0 && current->size >= size) {
+        if (current->in_use == 0 && current->size >= padded_size + BLOCK_SIZE) { // and this block size
             // use this block 
             current->in_use = 1;
             // if the block is big
-            if (current->size > size + BLOCK_SIZE) {
-                split(current, size);
+            if (current->size > padded_size + BLOCK_SIZE) { // and this block size
+                split(current, padded_size);
             }
             // give it to the user
             return (void *)(current + 1);
@@ -117,43 +121,59 @@ int main() {
 
     void *p;
 
-    p = myalloc(512);
-    print_data();
+    p = myalloc(10); print_data();
 
-    myfree(p);
-    print_data();
+    myfree(p); print_data();
 
-    // [512,used] -> [480,free]
-    // [512,free] -> [480,free]
-    void *p2;
+    // [16,used] -> [976,free]
+    // [1008,free]
 
-    void *p3 = myalloc(10);     print_data();
-    p2 = myalloc(20); print_data();
-    void *p4 = myalloc(30);     print_data();
-    myfree(p2);       print_data();
-    void *p5 = myalloc(40);     print_data();
-    void *p6 = myalloc(10);     print_data();
-    
-    myfree(p3); myfree(p4); myfree(p5); myfree(p6); print_data();
+    void *a, *q;
+
+    a = myalloc(10); print_data();
+    q = myalloc(20); print_data();
+
+    myfree(a); print_data();
+    myfree(q); print_data();
+
+    // [16,used] -> [976,free]
+    // [16,used] -> [32,used] -> [928,free]
+    // [16,free] -> [32,used] -> [928,free]
+    // [1008,free]
+
+    void *b, *h;
+
+    b = myalloc(10); print_data();
+    h = myalloc(20); print_data();
+
+    myfree(b); print_data();
+    myfree(h); print_data();
+
+    // [16,used] -> [976,free]
+    // [16,used] -> [32,used] -> [928,free]
+    // [16,used] -> [976,free]
+    // [1008,free]
+
+    void *c, *g, *r, *s;
+
+    c = myalloc(10); print_data();
+    g = myalloc(20); print_data();
+    r = myalloc(30); print_data();
+    s = myalloc(40); print_data();
+
+    myfree(c); print_data();
+    myfree(g); print_data();
+    myfree(s); print_data();
+    myfree(r); print_data();
 
     // [16,used] -> [976,free]
     // [16,used] -> [32,used] -> [928,free]
     // [16,used] -> [32,used] -> [32,used] -> [880,free]
-    // [16,used] -> [32,free] -> [32,used] -> [880,free]
+    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [816,free]
     // [16,used] -> [32,free] -> [32,used] -> [48,used] -> [816,free]
-    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [816,free]
-    
-    myalloc(10); print_data();
-    myalloc(20); print_data();
-    myalloc(30); print_data();
-    myalloc(40); print_data();
-    myalloc(50); print_data();
-    
-    // [16,used] -> [976,free]
-    // [16,used] -> [32,used] -> [928,free]
-    // [16,used] -> [32,used] -> [32,used] -> [880,free]
-    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [816,free]
-    // [16,used] -> [32,used] -> [32,used] -> [48,used] -> [64,used] -> [736,free]
+    // [64,free] -> [32,used] -> [48,used] -> [816,free]
+    // [64,free] -> [32,used] -> [880,free]
+    // [1008,free]  
 
     return 0;
 }
